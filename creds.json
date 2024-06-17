@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "revistapyme",
+  "private_key_id": "46e14bb9072d5b87ceaea94c6b5cf3c6f21c0a3e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC6SX0vn6Z9obYz\n81YG/NthNqxBBXcHpTtrjzuERytoR6TzvIvkE9cNnz/Ugc4iqwHs10B5QSHHZSFh\nNtDdJGIHjNScTuY3xiv+uEKh9S33F30P+m+oUwEKcEZAFPfgHt9FA8bN7hlWmuat\nSvbu8ARH5wPyGaRPPy/idf1XoYwMKPxAPzwD/r9vTnwe4kB4zuxnpFf7F6XaL7S9\nku1LXyd+wns0Q7DCdBQQCU+RnrzbaVHMcc2NchmEw1hn45yvjJznkWX94hOP3qPc\nKmzz7tLCFXZHyykD6CrlG1BTk7XSx1UH+DbCgZEhZgHi14xP1dDXCVYq1vmGUEdZ\n4VrufuJxAgMBAAECggEAHHwwx4e40GSaJRL8MFjZXeHbkJy6kQF31tBh2C3+yfUM\nmNWXqYJMI9HaU48eu2fdRT875V6rgN8qrcARS4Ns9v0WpKke5F/p6cr4q2W/h9VA\nYyFXEgzRL6yv3UwnhA6McvPrIiGan8bTZ6O7Ixmx+eGuFYbMvG5rzsved5gk/1XB\nRQ3PI3Zkd1qy8+j8bBhC+RMXyAfVtaLozwTXINXuf7FN9GpPUBgsGmvjQpUSJB4f\nGQC4C1+gvV3CW9NhSHZaRC7VidNjHBt1yJskE/hqrIe3qcVsGN7f0jOC/ke9R+tM\nEIrSLTosJqzaxZUWn9BPrP7QBzGQ6pOSqiF2/sDWjQKBgQDcI9unpIHjRaLK5KN9\nhQ6T5QKC2VNju3jmdGXEwov0IhrmyWyW4Y6Yx8PjwSBRhdxLU77qeDSDJEbVZ2K9\n+iMmUTiFtS9D8gs7L4xiSCBkjOyHWUtWeR0vzJvq2wQ01MUSrYZ+mEyD67WtKWXo\nMT0EGcPVb3a3TNxqlPLIkJ6WtQKBgQDYoeoXjltgtpOdLyJkEsP6VxZ6W8JCc+s1\nNhvuLVtm3ydN+Cvp1fnbCbxJgDvHDsHKdH0JFHG6ziQxxvZDNAATLn6w3fbIjaJq\nPL3nv03kv11wBvaqGimdzqSSvKPtFbnc8N+CYIv8nYNITezx6kSjwZUnX3Qn7yp5\n5VBvJXgWTQKBgGSxfjKTW9oyKwF1TZcHeqCJevmRIMSYpvd6vGYgutWDmByCe8oU\nCB64GVEfMII5oYdPGh+ztglaWZAZhx/wv40yT5FRS/pfR2XeHO+DoFV95F8QqBY4\ntfH8PEFTxvvHaxFdEAzt6unYsjQvoG5xv0AV7O6+2mWDobqawOaex/uVAoGBANNi\n+5hM0yHGRrhkm/xmy1Fm1YpEK4TItEVSLWL2Y3A4ZJQSjFc68vonv9FBDhOpdLRn\ngvLvPiL4sBzadscQ4NnWzs0rano8qrVb3DtdU1bY3QZJ5TwLF3zjfXeqF5NrVdgg\nOxlvuGmiEc7mK0XMQXpBlZe77w5gtGQJvbkXKN0pAoGAWLy/3K0EEg9nkFXqNYJg\ncg/sGujBSbRjOJCUMGZ8uiYNxPH+h/PjTYXJNA59c5K3Vtbb57E1kYG1/C9Ro0XK\nmRNOcX+iLrgN2tyHwJcvil/otoIMTLr24sHMupsIFBaMmGevzSwZaT83ukYhHZ+f\nOlU04aauaIs7cR7svREj9xM=\n-----END PRIVATE KEY-----\n",
+  "client_email": "revistapyme@revistapyme.iam.gserviceaccount.com",
+  "client_id": "101129744874198019511",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/revistapyme%40revistapyme.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
