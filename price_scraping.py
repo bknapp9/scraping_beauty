@@ -45,6 +45,7 @@ def get_page_source(url):
 	chrome_options.add_argument("--disable-gpu")
 	chrome_options.add_argument("--window-size=1920,1080")
 	chrome_options.add_argument("--no-sandbox")
+	chrome_options.binary_location = '/bin/google-chrome'
 
 	driver = webdriver.Chrome(service=webdriver_service, options=chrome_options)
 
