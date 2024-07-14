@@ -7,6 +7,9 @@ from urllib.parse import urlparse
 from datetime import datetime
 import pytz
 import statistics
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 
 SERVICE_ACCOUNT_FILE = 'creds.json'
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -22,94 +25,156 @@ service = build('sheets', 'v4', credentials=creds)
 sheet = service.spreadsheets()
 
 result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
-							range=f'BASE URL!A2:H').execute()
+							range=f'BASE ENV 2!C3:R').execute()
 values = result.get('values', [])
 
-data = []
+request_body = {}
 
+response = sheet.values().clear(
+	spreadsheetId=SPREADSHEET_ID,
+	range='REPORTE AJ!I2:U',
+	body=request_body
+).execute()
+
+
+def get_page_source(url):
+	webdriver_service = Service('chromedriver.exe')
+
+	chrome_options = Options()
+	chrome_options.add_argument("--headless")
+	chrome_options.add_argument("--disable-gpu")
+	chrome_options.add_argument("--window-size=1920,1080")
+
+	driver = webdriver.Chrome(service=webdriver_service, options=chrome_options)
+
+	driver.get(url)
+	page_source = driver.page_source
+
+	driver.quit()
+	return page_source
+	
 
 def scrape_product(url):
 	response = requests.get(url)
 	soup = BeautifulSoup(response.text, 'html.parser')
-	if 'beauty' in url:
-		try:
-			price = soup.select_one('.product-price__current-price.product-price__current-price--highlight-sale').string.strip()
 
-			price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
-		except:
+	selectors_and_functions = {
+		'beauty.plus': ('.product-price__current-price', None),
+		'dbs': ('.price', None),
+		'blush': ('', lambda prices: prices[0].text + prices[1].text),
+		'sokobox': ('.product__price--regular', None),
+		'preunic': ('.original-price', None),
+		'salcobrand': ('.normal-price', lambda soup: soup.find('meta', itemprop="price")['content'] if soup.find('meta',
+																												 itemprop="price") else None),
+		'beautycreation': ('.actual-price', None),
+		'pinklady': ('.product-price-final', None),
+		'paris': ('', lambda soup: next(
+			(
+				re.sub(r'[a-zA-Z\s,.$:]', '', re.search(r'\$\d+.\d+', tag.parent.text).group())
+				for tag in soup.find_all(string=re.compile("price", re.IGNORECASE))
+				if re.search(r'\$\d+.\d+', tag.parent.text)
+			),
+			None
+		)),
+		'falabella': (
+		'.price', lambda price_tag: re.sub(r'[a-zA-Z\s,.$:]', '', re.search(r'\d+[,.]?\d*', price_tag.text).group())),
+		'default': ('.price', None),
+	}
+
+	site_key = next((key for key in selectors_and_functions if key in url), 'default')
+	selector, special_function = selectors_and_functions[site_key]
+
+	if 'beauty.plus' in url:
+		pass
+	try:
+		if site_key == 'paris':  # Caso especial para 'paris'
+			page_source = get_page_source(url)  # Reemplaza 'get_page_source' con tu función actual
+			soup = BeautifulSoup(page_source, 'html.parser')
+
+		if special_function:
+			if selector:
+				price_tag = soup.select_one(selector)
+				price_text = special_function(price_tag)
+			else:
+				price_text = special_function(soup)
+		elif site_key == 'beauty.plus':
+			price_text = soup.select_one(selector).string.strip() if selector else None
+		else:
+			price_text = soup.select_one(selector).text if selector else None
+
+		if price_text:
+			price = re.sub(r'[a-zA-Z\s,.$:]', '', price_text)
+		else:
 			price = 'Sin Stock'
 
-		product_info = soup.find('div', id='especificacionesContent').find('p')
-		for strong_tag in product_info.find_all('strong'):
-			if strong_tag.text.strip() == 'Marca:':
-				brand = strong_tag.next_sibling.strip()
-				break
+	except AttributeError:
+		price = 'Sin Stock'
 
-		return price, brand
-	elif 'dbs' in url:
-		price = soup.select_one('.price').text
-
-		price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
-
-		brand = soup.select_one('.product-brand').text.strip()
-
-		return price, brand
-	elif 'preunic' in url:
-		try:
-			price = soup.select_one('.original-price').text
-
-			price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
-		except:
-			price = 'Sin Stock'
-
-		brand = soup.select_one('.product__brand').text.strip()
-
-		return price, brand
-	else:
-		try:
-			price_element = soup.find('span', class_='value')
-
-			price = price_element.get('content')
-			price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
-		except:
-			price = 'Sin Stock'
-
-		brand = soup.select_one('.product-brand').text.strip()
-
-		return price, brand
+	return price
 
 
 for row in values:
-	date = datetime.now(pytz.timezone('Chile/Continental')).strftime("%Y:%m:%d %H:%M:%S")
+	brand = row[1]
+	competitors = 9
+	all_competitors = 8
+	date = datetime.now(pytz.timezone('Chile/Continental')).strftime("%d/%m/%Y")
 	report = [[]]
-	prices = []
-	report[0].append(row[0])
+	prices = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 	report[0].append(date)
 
-	for i in range(0, 4):
-		product = row[i + i]
-		url = row[i+i+1]
+	for i in range(0, competitors):
+		product = row[0]
+		url = row[i + 7].replace(' ', '')
 		parsed_url = urlparse(url)
 
-		if 'www' in url:
-			company = parsed_url.netloc.split('.')[1]
-		else:
-			company = parsed_url.netloc.split('.')[0]
+		domain_parts = parsed_url.netloc.split('.')
 
-		price, brand = scrape_product(url)
+		if 'www' in domain_parts:
+			domain_parts.remove('www')
+
+		if len(domain_parts) > 2:
+			# Hay un subdominio, obtener el dominio principal
+			company = domain_parts[-2]
+		elif len(domain_parts) == 2:
+			# No hay subdominio
+			company = domain_parts[0]
+		else:
+			continue
+
+		price = scrape_product(url)
 
 		if not price:
 			price = 'Sin Stock'
 		elif price != 'Sin Stock':
 			price = int(price)
 
+		if 'beautycreation' in url:
+			price_b = row[6]
+			price_b = re.sub(r'[a-zA-Z\s,.$:]', '', price_b)
+			extraction_b = [[product, brand, date, price_b, url, 'beauty']]
+
+			if row[7] == ' - ':
+				prices[i - 1] = price_b
+
+			sheet.values().append(spreadsheetId=SPREADSHEET_ID,
+								  range='EXTRACC!A:F', valueInputOption='USER_ENTERED',
+								  body={'values': extraction_b}).execute()
+
 		extraction = [[product, brand, date, price, url, company]]
-		prices.append(price)
+		prices[i] = price
+		print(extraction)
 
 		sheet.values().append(spreadsheetId=SPREADSHEET_ID,
-							range='EXTRACC!A:F', valueInputOption='USER_ENTERED', body={'values':extraction}).execute()
+							  range='EXTRACC!A:F', valueInputOption='USER_ENTERED',
+							  body={'values': extraction}).execute()
 
-	numeric_data = [x for x in prices if isinstance(x, (int, float))]
+	count_non_zero = sum(
+		1 for x in prices if isinstance(x, (int, str)) and (isinstance(x, int) or x.isdigit()) and int(x) != 0)
+
+	if count_non_zero > 1:
+		numeric_data = [int(x) for x in prices if
+						isinstance(x, (int, str)) and (isinstance(x, int) or x.isdigit()) and int(x) != 0]
+
 	max_price = max(numeric_data)
 	min_price = min(numeric_data)
 	avg_price = statistics.mean(numeric_data)
@@ -119,34 +184,13 @@ for row in values:
 	report[0].append(max_price)
 	report[0].append(min_price)
 
-	sheet.values().append(spreadsheetId=SPREADSHEET_ID,
-						range='REPORTE!A:F', valueInputOption='USER_ENTERED', body={'values':report}).execute()
+	print(report)
 
-	# product = row[0]
-	# beauty_url = row[1]
-	# beauty_price, brand = scrape_product(beauty_url)
-	#
-	# compA_url = row[3]
-	# compA_price, brand = scrape_product(compA_url)
-	#
-	# compB_url = row[5]
-	# compB_price, brand = scrape_product(compB_url)
-	#
-	# compC_url = row[7]
-	# compC_price, brand = scrape_product(compC_url)
-	#
-	# if compC_price == '' or compC_price == 'Sin Stock':
-	# 	compC_price = 0
-	# if compB_price == 'Sin Stock':
-	# 	compB_price = 0
-	# if compA_price == 'Sin Stock':
-	# 	compA_price = 0
-	# if beauty_price == 'Sin Stock':
-	# 	beauty_price = 0
-	# average_price = round((int(compA_price) + int(compB_price) + int(compC_price)) / 3)
-	# max_price = max(int(beauty_price), int(compA_price), int(compB_price), int(compC_price))
-	# min_price = min(int(beauty_price), int(compA_price), int(compB_price), int(compC_price))
-	#
-	# report = [[product, date, beauty_price, compA_price, compB_price, compC_price, average_price, max_price, min_price]]
-	# sheet.values().append(spreadsheetId=SPREADSHEET_ID,
-	# 					  range='REPORTE!A:F', valueInputOption='USER_ENTERED', body={'values': report}).execute()
+	report_result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
+									   range='REPORTE AJ!I2:U').execute()
+	report_values = report_result.get('values', [])
+
+	sheet.values().append(spreadsheetId=SPREADSHEET_ID,
+						  range=f'REPORTE AJ!I{2 + len(report_values)}:U{2 + len(report_values)}',
+						  valueInputOption='USER_ENTERED',
+						  body={'values': report}).execute()
