@@ -11,7 +11,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
-SERVICE_ACCOUNT_FILE = 'creds.json'
+SERVICE_ACCOUNT_FILE = '//home//ec2-user//scraping_beauty//creds.json'
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 creds = None
@@ -38,12 +38,13 @@ response = sheet.values().clear(
 
 
 def get_page_source(url):
-	webdriver_service = Service('chromedriver.exe')
+	webdriver_service = Service('//home//ec2-user//scraping_beauty//chromedriver')
 
 	chrome_options = Options()
 	chrome_options.add_argument("--headless")
 	chrome_options.add_argument("--disable-gpu")
 	chrome_options.add_argument("--window-size=1920,1080")
+	chrome_options.add_argument("--no-sandbox")
 
 	driver = webdriver.Chrome(service=webdriver_service, options=chrome_options)
 
