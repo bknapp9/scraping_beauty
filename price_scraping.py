@@ -66,8 +66,7 @@ def scrape_product(url):
 		'blush': ('', lambda prices: prices[0].text + prices[1].text),
 		'sokobox': ('.product__price--regular', None),
 		'preunic': ('.original-price', None),
-		'salcobrand': ('.normal-price', lambda soup: soup.find('meta', itemprop="price")['content'] if soup.find('meta',
-																												 itemprop="price") else None),
+		'salcobrand': ('', lambda soup: soup.find('meta', itemprop="price")['content'] if soup.find('meta', itemprop="price") else soup.select_one('.normal-price').text),
 		'beautycreation': ('.actual-price', None),
 		'pinklady': ('.product-price-final', None),
 		'paris': ('', lambda soup: next(
@@ -85,9 +84,7 @@ def scrape_product(url):
 
 	site_key = next((key for key in selectors_and_functions if key in url), 'default')
 	selector, special_function = selectors_and_functions[site_key]
-
-	if 'beauty.plus' in url:
-		pass
+	print(special_function)
 	try:
 		if site_key == 'paris':  # Caso especial para 'paris'
 			page_source = get_page_source(url)  # Reemplaza 'get_page_source' con tu función actual
@@ -97,6 +94,11 @@ def scrape_product(url):
 			if selector:
 				price_tag = soup.select_one(selector)
 				price_text = special_function(price_tag)
+				price_meta = soup.find('meta', itemprop="price")
+				if price_meta:
+					price = price_meta['content']
+				else:
+					price = soup.select_one('.normal-price').text
 			else:
 				price_text = special_function(soup)
 		elif site_key == 'beauty.plus':
