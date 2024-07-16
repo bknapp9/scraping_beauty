@@ -10,6 +10,7 @@ import statistics
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from time import sleep
 
 SERVICE_ACCOUNT_FILE = '//home//ec2-user//scraping_beauty//creds.json'
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -163,14 +164,17 @@ for row in values:
 			sheet.values().append(spreadsheetId=SPREADSHEET_ID,
 								  range='EXTRACC!A:F', valueInputOption='USER_ENTERED',
 								  body={'values': extraction_b}).execute()
-
+	
 		extraction = [[product, brand, date, price, url, company]]
 		prices[i] = price
 		print(extraction)
 
-		sheet.values().append(spreadsheetId=SPREADSHEET_ID,
-							  range='EXTRACC!A:F', valueInputOption='USER_ENTERED',
-							  body={'values': extraction}).execute()
+		try:
+			sheet.values().append(spreadsheetId=SPREADSHEET_ID,
+								  range='EXTRACC!A:F', valueInputOption='USER_ENTERED',
+								  body={'values': extraction}).execute()
+		except:
+			sleep(60)
 
 	count_non_zero = sum(
 		1 for x in prices if isinstance(x, (int, str)) and (isinstance(x, int) or x.isdigit()) and int(x) != 0)
