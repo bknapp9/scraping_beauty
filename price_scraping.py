@@ -33,7 +33,7 @@ request_body = {}
 
 response = sheet.values().clear(
 	spreadsheetId=SPREADSHEET_ID,
-	range='REPORTE AJ!I2:U',
+	range='REPORTE AJ!I3:U',
 	body=request_body
 ).execute()
 
@@ -195,10 +195,10 @@ for row in values:
 	print(report)
 
 	report_result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
-									   range='REPORTE AJ!I2:U').execute()
+									   range='REPORTE AJ!I3:U').execute()
 	report_values = report_result.get('values', [])
 
 	sheet.values().append(spreadsheetId=SPREADSHEET_ID,
-						  range=f'REPORTE AJ!I{2 + len(report_values)}:U{2 + len(report_values)}',
+						  range=f'REPORTE AJ!I{3 + len(report_values)}:U{3 + len(report_values)}',
 						  valueInputOption='USER_ENTERED',
 						  body={'values': report}).execute()
