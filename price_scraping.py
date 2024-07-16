@@ -14,7 +14,7 @@ from time import sleep
 
 SERVICE_ACCOUNT_FILE = '//home//ec2-user//scraping_beauty//creds.json'
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-
+print(datetime.now())
 creds = None
 creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
