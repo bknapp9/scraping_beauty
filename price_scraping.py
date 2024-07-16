@@ -174,7 +174,7 @@ for row in values:
 								  range='EXTRACC!A:F', valueInputOption='USER_ENTERED',
 								  body={'values': extraction}).execute()
 		except:
-			sleep(60)
+			sleep(30)
 
 	count_non_zero = sum(
 		1 for x in prices if isinstance(x, (int, str)) and (isinstance(x, int) or x.isdigit()) and int(x) != 0)
