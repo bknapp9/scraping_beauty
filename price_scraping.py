@@ -66,7 +66,7 @@ def scrape_product(url):
 		'dbs': ('.price', None),
 		'blush': ('', lambda prices: prices[0].text + prices[1].text),
 		'sokobox': ('.product__price--regular', None),
-		'preunic': ('.original-price', None),
+		'preunic': ('', lambda soup: extract_preunic_price(soup)),
 		'salcobrand': ('', lambda soup: soup.find('meta', itemprop="price")['content'] if soup.find('meta', itemprop="price") else soup.select_one('.normal-price').text),
 		'beautycreation': ('.actual-price', None),
 		'pinklady': ('.product-price-final', None),
@@ -85,7 +85,6 @@ def scrape_product(url):
 
 	site_key = next((key for key in selectors_and_functions if key in url), 'default')
 	selector, special_function = selectors_and_functions[site_key]
-	print(special_function)
 	try:
 		if site_key == 'paris':  # Caso especial para 'paris'
 			page_source = get_page_source(url)  # Reemplaza 'get_page_source' con tu función actual
@@ -98,7 +97,7 @@ def scrape_product(url):
 				price_meta = soup.find('meta', itemprop="price")
 				if price_meta:
 					price = price_meta['content']
-				else:
+				elif not price_meta and site_key != 'falabella':
 					price = soup.select_one('.normal-price').text
 			else:
 				price_text = special_function(soup)
@@ -118,17 +117,36 @@ def scrape_product(url):
 	return price
 
 
+def extract_preunic_price(soup):
+	price = soup.select_one('.offer-price')
+	if price:
+		return price.text
+	price = soup.select_one('.discount-price-preunic')
+	if price and 'Tarjeta' not in price.text:
+		return price.text
+	price = soup.select_one('.original-price')
+	if price:
+		return price.text
+	return 'Sin Stock'
+	
+
 for row in values:
+	product = row[0]
 	brand = row[1]
+
 	competitors = 9
-	all_competitors = 8
 	date = datetime.now(pytz.timezone('Chile/Continental')).strftime("%d/%m/%Y")
 	report = [[]]
 	prices = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 	report[0].append(date)
 
+	if '-' in row[7]:
+		price_b = row[6]
+		price_b = re.sub(r'[a-zA-Z\s,.$:]', '', price_b)
+
+		prices[0] = price_b
+
 	for i in range(0, competitors):
-		product = row[0]
 		url = row[i + 7].replace(' ', '')
 		parsed_url = urlparse(url)
 
@@ -138,10 +156,10 @@ for row in values:
 			domain_parts.remove('www')
 
 		if len(domain_parts) > 2:
-			# Hay un subdominio, obtener el dominio principal
+			
 			company = domain_parts[-2]
 		elif len(domain_parts) == 2:
-			# No hay subdominio
+			
 			company = domain_parts[0]
 		else:
 			continue
@@ -153,28 +171,24 @@ for row in values:
 		elif price != 'Sin Stock':
 			price = int(price)
 
-		if 'beautycreation' in url:
-			price_b = row[6]
-			price_b = re.sub(r'[a-zA-Z\s,.$:]', '', price_b)
-			extraction_b = [[product, brand, date, price_b, url, 'beauty']]
 
-			if row[7] == ' - ':
-				prices[i - 1] = price_b
-
-			sheet.values().append(spreadsheetId=SPREADSHEET_ID,
-								  range='EXTRACC!A:F', valueInputOption='USER_ENTERED',
-								  body={'values': extraction_b}).execute()
-	
 		extraction = [[product, brand, date, price, url, company]]
 		prices[i] = price
 		print(extraction)
 
-		try:
-			sheet.values().append(spreadsheetId=SPREADSHEET_ID,
-								  range='EXTRACC!A:F', valueInputOption='USER_ENTERED',
-								  body={'values': extraction}).execute()
-		except:
-			sleep(30)
+		max_retries = 3
+		for attempt in range(max_retries + 1):
+			try:
+				sheet.values().append(spreadsheetId=SPREADSHEET_ID,
+									  range='EXTRACC!A:F', valueInputOption='USER_ENTERED',
+									  body={'values': extraction}).execute()
+				break
+			except Exception as e:
+				print(f"Error durante la ejecución. Intento {attempt} de {max_retries}. Reintentando en 30 segundos...")
+				sleep(30)
+
+		if attempt == max_retries:
+			raise e
 
 	count_non_zero = sum(
 		1 for x in prices if isinstance(x, (int, str)) and (isinstance(x, int) or x.isdigit()) and int(x) != 0)
@@ -198,7 +212,16 @@ for row in values:
 									   range='REPORTE AJ!I3:U').execute()
 	report_values = report_result.get('values', [])
 
-	sheet.values().append(spreadsheetId=SPREADSHEET_ID,
-						  range=f'REPORTE AJ!I{3 + len(report_values)}:U{3 + len(report_values)}',
-						  valueInputOption='USER_ENTERED',
-						  body={'values': report}).execute()
+	for attempt in range(max_retries + 1):
+		try:
+			sheet.values().append(spreadsheetId=SPREADSHEET_ID,
+								  range=f'REPORTE AJ!I{3 + len(report_values)}:U{3 + len(report_values)}', valueInputOption='USER_ENTERED',
+								  body={'values': report}).execute()
+			break
+		except Exception as e:
+			print(f"Error durante la ejecución. Intento {attempt} de {max_retries}. Reintentando en 30 segundos...")
+			sleep(30)
+
+	if attempt == max_retries:
+		raise e
+
