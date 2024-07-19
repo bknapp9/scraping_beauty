@@ -38,6 +38,23 @@ response = sheet.values().clear(
 ).execute()
 
 
+def update_reporte_ac():
+	reporte_ac = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range='REPORTE AJ!A3:U').execute()
+	values_ac = reporte_ac.get('values', [])
+
+	if not values_ac:
+		print('No data found.')
+		return
+
+	sheet.values().append(
+		spreadsheetId=SPREADSHEET_ID,
+		range='REPORTE AC!A:Z',
+		valueInputOption='USER_ENTERED',
+		insertDataOption='INSERT_ROWS',
+		body={'values': values_ac}
+	).execute()
+
+
 def get_page_source(url):
 	webdriver_service = Service('//home//ec2-user//scraping_beauty//chromedriver')
 
@@ -225,3 +242,4 @@ for row in values:
 	if attempt == max_retries:
 		raise e
 
+update_reporte_ac()
