@@ -66,7 +66,7 @@ def get_page_source(url):
 	chrome_options.binary_location = '/bin/google-chrome'
 
 	driver = webdriver.Chrome(service=webdriver_service, options=chrome_options)
-
+	sleep(3)
 	driver.get(url)
 	page_source = driver.page_source
 
