@@ -62,7 +62,7 @@ def update_reporte_ac():
 
 def get_page_source(url):
 	options = FirefoxOptions()
-	options.headless = True
+	options.add_argument('-headless')
 	geckodriver_path = '//home//ec2-user//scraping_beauty//geckodriver'
 	service = Service(geckodriver_path)
 
