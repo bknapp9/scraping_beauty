@@ -11,6 +11,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from time import sleep
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+
 
 SERVICE_ACCOUNT_FILE = 'creds.json'
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -58,19 +60,15 @@ def update_reporte_ac():
 	).execute()
 
 
-def get_page_source(url, headless=True):
-	webdriver_service = Service('chromedriver.exe')
+def get_page_source(url):
+	options = FirefoxOptions()
+	options.headless = True
+	geckodriver_path = 'geckodriver.exe'
+	service = Service(geckodriver_path)
 
-	chrome_options = Options()
-	if headless:
-		chrome_options.add_argument("--headless")
-	chrome_options.add_argument("--disable-gpu")
-	chrome_options.add_argument("--window-size=1920,1080")
-
-	driver = webdriver.Chrome(service=webdriver_service, options=chrome_options)
+	driver = webdriver.Firefox(service=service, options=options)
 
 	driver.get(url)
-	sleep(3)
 	page_source = driver.page_source
 
 	driver.quit()
@@ -141,7 +139,7 @@ def scrape_product(url):
 
 
 def extract_ripley_price(url):
-	page_source = get_page_source(url, headless=False)
+	page_source = get_page_source(url)
 	soup = BeautifulSoup(page_source, 'html.parser')
 
 	internet_price_container = soup.find('div', class_='product-price-container product-internet-price')
