@@ -63,6 +63,7 @@ def update_reporte_ac():
 def get_page_source(url):
 	options = FirefoxOptions()
 	options.add_argument('-headless')
+	options.binary_location = '//usr//bin//firefox'
 	geckodriver_path = '//home//ec2-user//scraping_beauty//geckodriver'
 	service = Service(geckodriver_path)
 
@@ -143,6 +144,7 @@ def extract_ripley_price(url):
 	soup = BeautifulSoup(page_source, 'html.parser')
 
 	internet_price_container = soup.find('div', class_='product-price-container product-internet-price')
+	print(internet_price_container)
 	if internet_price_container:
 		price = internet_price_container.select_one('.product-price').text
 		return price
