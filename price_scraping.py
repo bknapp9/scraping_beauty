@@ -174,7 +174,6 @@ def extract_preunic_price(soup):
 	
 
 for row in values:
-	print(price)
 	product = row[0]
 	brand = row[1]
 
