@@ -73,13 +73,9 @@ def get_page_source(url):
 	driver = webdriver.Firefox(service=service, options=options)
 
 	driver.get(url)
-	WebDriverWait(driver, 60).until(
-	EC.presence_of_element_located((By.CLASS_NAME, 'product-price-container')))
 	
 	page_source = driver.page_source
-
-	with open('output.txt', 'w', encoding='utf-8') as file:
-		file.write(page_source)
+	
 	driver.quit()
 	return page_source
 	
@@ -178,7 +174,6 @@ def extract_preunic_price(soup):
 	
 
 for row in values:
-	price = scrape_product('https://simple.ripley.cl/la-mejor-base-liquida-flawless-stay-tono-fs-70-de-beauty-creations-mpm00062636940?s=mdco&acabado_=satinado&color_fantasia_text=transparente')
 	print(price)
 	product = row[0]
 	brand = row[1]
