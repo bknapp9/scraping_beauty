@@ -12,6 +12,9 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from time import sleep
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.by import By
 
 
 SERVICE_ACCOUNT_FILE = 'creds.json'
@@ -70,8 +73,13 @@ def get_page_source(url):
 	driver = webdriver.Firefox(service=service, options=options)
 
 	driver.get(url)
+	WebDriverWait(driver, 60).until(
+	EC.presence_of_element_located((By.CLASS_NAME, 'product-price-container')))
+	
 	page_source = driver.page_source
 
+	with open('output.txt', 'w', encoding='utf-8') as file:
+		file.write(page_source)
 	driver.quit()
 	return page_source
 	
