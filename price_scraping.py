@@ -237,8 +237,11 @@ for row in values:
 	if count_non_zero > 1:
 		numeric_data = [int(x) for i, x in enumerate(prices)
 						if i != 8 and isinstance(x, (int, str)) and (isinstance(x, int) or x.isdigit()) and int(x) != 0]
+		price_beauty = prices[8]
+	else:
+		numeric_data = [0]
+		price_beauty = 0
 
-	price_beauty = prices[8]
 	max_price = max(numeric_data)
 	min_price = min(numeric_data)
 	avg_price = statistics.mean(numeric_data)
