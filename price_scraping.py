@@ -36,7 +36,7 @@ values = result.get('values', [])
 
 request_body = {}
 
-RANGE_REPORT = 'I3:X'
+RANGE_REPORT = 'I3:Y'
 RANGE_EXTRACTION = 'A:F'
 
 response = sheet.values().clear(
@@ -189,7 +189,7 @@ for row in values:
 	product = row[0]
 	brand = row[1]
 
-	competitors = 8
+	competitors = 9
 	date = datetime.now(pytz.timezone('Chile/Continental')).strftime("%d/%m/%Y")
 	report = [[]]
 	prices = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -197,7 +197,7 @@ for row in values:
 
 	price_b = row[6]
 	price_b = re.sub(r'[a-zA-Z\s,.$:]', '', price_b)
-	prices[8] = price_b
+	prices[-1] = price_b
 
 	for i in range(0, competitors):
 		url = row[i + 7].replace(' ', '')
@@ -249,7 +249,7 @@ for row in values:
 	if count_non_zero > 1:
 		numeric_data = [int(x) for i, x in enumerate(prices)
 						if i != 8 and isinstance(x, (int, str)) and (isinstance(x, int) or x.isdigit()) and int(x) != 0]
-		price_beauty = prices[8]
+		price_beauty = prices[-1]
 	else:
 		numeric_data = [0]
 		price_beauty = 0
