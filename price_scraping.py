@@ -64,19 +64,17 @@ def update_reporte_ac():
 
 
 def get_page_source(url):
-	options = FirefoxOptions()
-	options.add_argument('-headless')
-	options.binary_location = '//usr//bin//firefox'
-	geckodriver_path = '//home//ec2-user//scraping_beauty//geckodriver'
-	service = Service(geckodriver_path)
+	webdriver_service = Service('chromedriver.exe')
 
-	driver = webdriver.Firefox(service=service, options=options)
+	chrome_options = Options()
+	chrome_options.add_argument("--window-size=1920,1080")
+
+	driver = webdriver.Chrome(service=webdriver_service, options=chrome_options)
 
 	driver.get(url)
-	
+	sleep(4)
 	page_source = driver.page_source
-	
-	driver.quit()
+
 	return page_source
 	
 
@@ -106,6 +104,7 @@ def scrape_product(url):
 			'.price',
 			lambda price_tag: re.sub(r'[a-zA-Z\s,.$:]', '', re.search(r'\d+[,.]?\d*', price_tag.text).group())),
 		'simple.ripley': ('', lambda soup: extract_ripley_price(url)),
+		'natura': ('', lambda soup: extract_natura_price(url)),
 		'default': ('.price', None),
 	}
 
@@ -171,7 +170,20 @@ def extract_preunic_price(soup):
 	if price:
 		return price.text
 	return 'Sin Stock'
-	
+
+
+def extract_natura_price(url):
+	page_source = get_page_source(url)
+	soup = BeautifulSoup(page_source, 'html.parser')
+
+	price_container = soup.find('div', class_=lambda x: x and 'Price-module__price--' in x)
+	if price_container:
+		price = price_container.select_one('.MuiTypography-root')
+
+		return price.text
+	else:
+		return 'Sin Stock'
+
 
 for row in values:
 	product = row[0]
