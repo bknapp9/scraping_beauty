@@ -64,12 +64,16 @@ def update_reporte_ac():
 
 
 def get_page_source(url):
-	webdriver_service = Service('chromedriver.exe')
+	webdriver_service = Service('geckodriver.exe')
 
-	chrome_options = Options()
-	chrome_options.add_argument("--window-size=1920,1080")
+	firefox_options = Options()
+	if 'natura' not in url:
+		firefox_options.add_argument("--headless")
+	firefox_options.add_argument("--width=1920")
+	firefox_options.add_argument("--height=1080")
+	firefox_options.binary_location = r'C:\Program Files\Mozilla Firefox\firefox.exe'
 
-	driver = webdriver.Chrome(service=webdriver_service, options=chrome_options)
+	driver = webdriver.Firefox(service=webdriver_service, options=firefox_options)
 
 	driver.get(url)
 	sleep(4)
