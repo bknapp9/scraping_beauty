@@ -1,22 +1,3 @@
-from googleapiclient.discovery import build
-from google.oauth2 import service_account
-from bs4 import BeautifulSoup
-import requests
-import re
-from urllib.parse import urlparse
-from datetime import datetime
-import pytz
-import statistics
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from time import sleep
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.by import By
-
-
 SERVICE_ACCOUNT_FILE = 'creds.json'
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 print(datetime.now())
@@ -78,9 +59,10 @@ def get_page_source(url):
 	driver.get(url)
 	sleep(4)
 	page_source = driver.page_source
+	driver.quit()
 
 	return page_source
-	
+
 
 def scrape_product(url):
 	response = requests.get(url)
@@ -140,7 +122,8 @@ def scrape_product(url):
 		else:
 			price = 'Sin Stock'
 
-	except AttributeError:
+	except AttributeError as e:
+		print(e)
 		price = 'Sin Stock'
 
 	return price
@@ -151,7 +134,6 @@ def extract_ripley_price(url):
 	soup = BeautifulSoup(page_source, 'html.parser')
 
 	internet_price_container = soup.find('div', class_='product-price-container product-internet-price')
-	print(internet_price_container)
 	if internet_price_container:
 		price = internet_price_container.select_one('.product-price').text
 		return price
@@ -193,10 +175,10 @@ for row in values:
 	product = row[0]
 	brand = row[1]
 
-	competitors = 9
+	competitors = 8
 	date = datetime.now(pytz.timezone('Chile/Continental')).strftime("%d/%m/%Y")
 	report = [[]]
-	prices = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	prices = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 	report[0].append(date)
 
 	price_b = row[6]
@@ -283,7 +265,7 @@ for row in values:
 	for attempt in range(max_retries + 1):
 		try:
 			sheet.values().append(spreadsheetId=SPREADSHEET_ID,
-								  range=f'REPORTE AJ!I{3 + len(report_values)}:U{3 + len(report_values)}',
+								  range=f'REPORTE AJ!I{3 + len(report_values)}:Y{3 + len(report_values)}',
 								  valueInputOption='USER_ENTERED',
 								  body={'values': report}).execute()
 			break
@@ -295,3 +277,4 @@ for row in values:
 		raise e
 
 update_reporte_ac()
+
