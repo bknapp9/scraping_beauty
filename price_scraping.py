@@ -1,3 +1,17 @@
+from time import sleep
+from googleapiclient.discovery import build
+from google.oauth2 import service_account
+from bs4 import BeautifulSoup
+import requests
+import re
+from urllib.parse import urlparse
+from datetime import datetime
+import pytz
+import statistics
+from selenium import webdriver
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.options import Options
+
 SERVICE_ACCOUNT_FILE = 'creds.json'
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 print(datetime.now())
@@ -77,7 +91,6 @@ def scrape_product(url):
 																									itemprop="price") else soup.select_one(
 			'.normal-price').text),
 		'beautycreation': ('.actual-price', None),
-		'pinklady': ('.product-price-final', None),
 		'paris': ('', lambda soup: next(
 			(
 				re.sub(r'[a-zA-Z\s,.$:]', '', re.search(r'\$\d+.\d+', tag.parent.text).group())
@@ -104,12 +117,15 @@ def scrape_product(url):
 		if special_function:
 			if selector:
 				price_tag = soup.select_one(selector)
-				price_text = special_function(price_tag)
-				price_meta = soup.find('meta', itemprop="price")
-				if price_meta:
-					price = price_meta['content']
-				elif not price_meta and site_key != 'falabella':
-					price = soup.select_one('.normal-price').text
+				if not price_tag:
+					price_text = extract_falabella_price(url)
+				else:
+					price_text = special_function(price_tag)
+					price_meta = soup.find('meta', itemprop="price")
+					if price_meta:
+						price = price_meta['content']
+					elif not price_meta and site_key != 'falabella':
+						price = soup.select_one('.normal-price').text
 			else:
 				price_text = special_function(soup)
 		elif site_key == 'beauty.plus':
@@ -171,6 +187,140 @@ def extract_natura_price(url):
 		return 'Sin Stock'
 
 
+def extract_falabella_price(url):
+	page_source = get_page_source(url)
+	soup = BeautifulSoup(page_source, 'html.parser')
+
+	discount_price = soup.find('li', {'data-internet-price': True})
+	if discount_price:
+		price = discount_price['data-internet-price']
+		return price
+	else:
+		normal_price = soup.find('li', {'data-normal-price': True})
+		if normal_price:
+			price = normal_price['data-normal-price']
+			return price
+		else:
+			return 'Sin Stock'
+	return 'Sin Stock'
+# if 'beauty.plus' in url:
+# 	try:
+# 		price = soup.select_one('.product-price__current-price').string.strip()
+#
+# 		price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
+# 	except:
+# 		price = 'Sin Stock'
+#
+# 	return price
+# elif 'dbs' in url:
+# 	try:
+# 		price = soup.select_one('.price').text
+#
+# 		price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
+# 	except:
+# 		price = 'Sin Stock'
+#
+# 	return price
+# elif 'blush' in url:
+# 	try:
+# 		prices = soup.find_all(class_='vtex-product-price-1-x-currencyInteger')
+#
+# 		price = prices[0].text + prices[1].text
+#
+# 		price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
+# 	except:
+# 		price = 'Sin Stock'
+#
+# 	return price
+# elif 'sokobox' in url:
+# 	try:
+# 		price = soup.select_one('.product__price--regular').text
+#
+# 		price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
+# 	except:
+# 		price = 'Sin Stock'
+#
+# 	return price
+# elif 'preunic' in url:
+# 	try:
+# 		price = soup.select_one('.offer-price')
+#
+# 		if price:
+# 			price = re.sub(r'[a-zA-Z\s,.$:]', '', price.text)
+# 		else:
+# 			price = soup.select_one('.original-price').text
+# 		return price
+# 		price = soup.select_one('.original-price').text
+#
+# 		price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
+# 	except:
+# 		price = 'Sin Stock'
+#
+# 	return price
+# elif 'salcobrand' in url:
+# 	try:
+# 		price_meta = soup.find('meta', itemprop="price")
+#
+# 		if price_meta:
+# 			price = price_meta['content']
+# 			price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
+# 		else:
+# 			price = soup.select_one('.normal-price').text
+#
+# 			price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
+# 	except:
+# 		price = 'Sin Stock'
+#
+# 	return price
+# elif 'beautycreation' in url:
+# 	try:
+# 		price = soup.select_one('.actual-price').text
+#
+# 		price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
+# 	except:
+# 		price = 'Sin Stock'
+#
+# 	return price
+# elif 'pinklady' in url:
+# 	try:
+# 		price = soup.select_one('.product-price-final').text
+#
+# 		price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
+# 	except:
+# 		price = 'Sin Stock'
+#
+# 	return price
+# else:
+# 	if 'paris' in url:
+# 		try:
+# 			page_source = get_page_source(url)
+# 			soup = BeautifulSoup(page_source, 'html.parser')
+# 			price_tag = soup.find(string=re.compile("price", re.IGNORECASE))
+# 			price_text = price_tag.parent.text  # Obtener el texto completo del elemento padre
+# 			price_match = re.search(r'\$\d+.\d+', price_text)
+# 			price = price_match.group()
+# 			price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
+#
+# 			if not price:
+# 				price = 'Sin Stock'
+# 		except:
+# 			price = 'Sin Stock'
+# 	else:
+# 		try:
+# 			price_tag = soup.find(class_='price')
+# 			price_text = price_tag.text
+# 			match = re.search(r'\d+[,.]?\d*', price_text)
+# 			price = match.group()
+# 			price = re.sub(r'[a-zA-Z\s,.$:]', '', price)
+#
+# 			if not price:
+# 				price = 'Sin Stock'
+# 		except:
+# 			price = 'Sin Stock'
+#
+# 	return price
+
+
 for row in values:
 	product = row[0]
 	brand = row[1]
@@ -178,17 +328,18 @@ for row in values:
 	competitors = 8
 	date = datetime.now(pytz.timezone('Chile/Continental')).strftime("%d/%m/%Y")
 	report = [[]]
-	prices = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+	prices = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 	report[0].append(date)
 
 	price_b = row[6]
 	price_b = re.sub(r'[a-zA-Z\s,.$:]', '', price_b)
 	prices[-1] = price_b
 
-	for i in range(0, competitors):
+	for i in range(1, competitors):
 		url = row[i + 7].replace(' ', '')
 		parsed_url = urlparse(url)
-
+		if 'natura' in url:
+			print('natura')
 		domain_parts = parsed_url.netloc.split('.')
 
 		if 'www' in domain_parts:
@@ -212,7 +363,7 @@ for row in values:
 				price = int(price)
 
 			extraction = [[product, brand, date, price, url, company]]
-			prices[i] = price
+			prices[i-1] = price
 			print(extraction)
 
 		max_retries = 3
@@ -277,4 +428,3 @@ for row in values:
 		raise e
 
 update_reporte_ac()
-
