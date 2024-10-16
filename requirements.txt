@@ -7,3 +7,9 @@ datetime
 pytz
 selenium
 time
+
+
+beautifulsoup4==4.11.1
+google_api_python_client==2.60.0
+protobuf==5.28.2
+Requests==2.32.3
